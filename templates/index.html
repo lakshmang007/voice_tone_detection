@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Tone Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Voice Tone Detector</h1>
+            <p>Speak to detect your emotional tone</p>
+        </header>
+
+        <main>
+            <div class="tone-display">
+                <div id="emoji-container">
+                    <div id="emoji">😶</div>
+                    <div id="emotion-text">Waiting for voice...</div>
+                    <div id="description-text" class="description-text"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="record-btn" class="btn">
+                    <span class="btn-icon">🎤</span>
+                    <span class="btn-text">Start Continuous Recording</span>
+                </button>
+
+                <div id="timer" class="hidden">Recording time: <span id="seconds">0</span>s</div>
+
+                <div id="status-message"></div>
+            </div>
+
+            <div class="instructions">
+                <h3>How it works:</h3>
+                <ol>
+                    <li>Click the "Start Continuous Recording" button</li>
+                    <li>Speak naturally - your voice will be analyzed continuously</li>
+                    <li>The system will update the detected tone every few seconds</li>
+                    <li>Your emotional tone will be displayed as an emoji with description</li>
+                    <li>Click the button again to stop recording</li>
+                </ol>
+
+                <div class="tone-examples">
+                    <h3>Example sentences for different tones:</h3>
+                    <div class="examples-container">
+                        <div class="example-card">
+                            <div class="example-emoji">🧐</div>
+                            <div class="example-tone">Formal</div>
+                            <div class="example-text">"I hereby request your attention to this matter of utmost importance."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">😌</div>
+                            <div class="example-tone">Informal</div>
+                            <div class="example-text">"Hey, what's up? Just checking in to see how you're doing."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">😊</div>
+                            <div class="example-tone">Friendly</div>
+                            <div class="example-text">"It's so wonderful to see you again! I've missed our chats."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">😠</div>
+                            <div class="example-tone">Aggressive</div>
+                            <div class="example-text">"I've told you repeatedly to stop doing that! Listen to me!"</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">😃</div>
+                            <div class="example-tone">Optimistic</div>
+                            <div class="example-text">"I'm sure we'll find a solution! Things are looking up!"</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">📚</div>
+                            <div class="example-tone">Informative</div>
+                            <div class="example-text">"Studies show that regular exercise improves cognitive function."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">🎭</div>
+                            <div class="example-tone">Entertaining</div>
+                            <div class="example-text">"You won't believe what happened next! It was absolutely wild!"</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">👔</div>
+                            <div class="example-tone">Professional</div>
+                            <div class="example-text">"Based on our analysis, we recommend proceeding with option B."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">👑</div>
+                            <div class="example-tone">Authoritative</div>
+                            <div class="example-text">"As the expert in this field, I can assure you this is the correct approach."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">✨</div>
+                            <div class="example-tone">Animated</div>
+                            <div class="example-text">"Oh my gosh! That's AMAZING! I can't believe it! Wow!"</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">😄</div>
+                            <div class="example-tone">Humorous</div>
+                            <div class="example-text">"So a penguin walks into a bar... you're going to love this!"</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">💬</div>
+                            <div class="example-tone">Conversational</div>
+                            <div class="example-text">"So anyway, I was thinking about what you said earlier..."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">👉</div>
+                            <div class="example-tone">Directive</div>
+                            <div class="example-text">"First, open the file. Then, click on settings. Finally, save changes."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">💪</div>
+                            <div class="example-tone">Assertive</div>
+                            <div class="example-text">"I need this completed by Friday. No exceptions."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">🤔</div>
+                            <div class="example-tone">Questioning</div>
+                            <div class="example-text">"Have you considered what might happen if we try a different approach?"</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">💖</div>
+                            <div class="example-tone">Empathic</div>
+                            <div class="example-text">"I understand how difficult this must be for you. I'm here to help."</div>
+                        </div>
+
+                        <div class="example-card">
+                            <div class="example-emoji">🎯</div>
+                            <div class="example-tone">Persuasive</div>
+                            <div class="example-text">"Imagine how much better your life will be once you make this change."</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Voice Tone Detection Project &copy; 2025</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='css/js/app.js') }}"></script>
+</body>
+</html>
