@@ -122,5 +122,9 @@ def record_audio():
             'message': str(e)
         }), 500
 
+# This is for local development
 if __name__ == '__main__':
     app.run(debug=True)
+
+# For Vercel deployment
+app.debug = False
