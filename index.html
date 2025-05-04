@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Tone Detection</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --accent-color: #fd79a8;
+            --background-color: #f9f9f9;
+            --card-color: #ffffff;
+            --text-color: #2d3436;
+            --text-light: #636e72;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+        
+        main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+            main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .card {
+            background-color: var(--card-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title .emoji {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+        }
+        
+        .card-content {
+            margin-bottom: 1.5rem;
+        }
+        
+        .features {
+            list-style-type: none;
+            margin-bottom: 1.5rem;
+        }
+        
+        .features li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .features li::before {
+            content: "✓";
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .demo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .demo-emoji {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .tone-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .example-card {
+            background-color: rgba(108, 92, 231, 0.05);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            transition: var(--transition);
+            text-align: center;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            background-color: rgba(108, 92, 231, 0.1);
+        }
+        
+        .example-emoji {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .example-tone {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .example-text {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem 0;
+            color: var(--text-light);
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .social-link {
+            display: flex;
+            align-items: center;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            background-color: rgba(108, 92, 231, 0.1);
+        }
+        
+        .social-link:hover {
+            background-color: rgba(108, 92, 231, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .social-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Voice Tone Detection</h1>
+            <p class="subtitle">Detect emotional tones in human voice using machine learning</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <h2 class="card-title"><span class="emoji">🎤</span> About the Project</h2>
+                <div class="card-content">
+                    <p>This machine learning project detects the emotional tone in human voice and displays it as emojis in real-time. It uses a sophisticated audio processing pipeline to analyze speech patterns and identify different tones.</p>
+                    
+                    <ul class="features">
+                        <li>Real-time voice tone detection</li>
+                        <li>Continuous speech recognition</li>
+                        <li>17 different emotional tones</li>
+                        <li>Voice activity detection</li>
+                        <li>Modern web interface with emojis</li>
+                        <li>Example sentences for each tone</li>
+                    </ul>
+                    
+                    <a href="https://github.com/lakshmang007/voice_tone_detection" class="btn">View on GitHub</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title"><span class="emoji">🔊</span> How It Works</h2>
+                <div class="card-content">
+                    <div class="demo-container">
+                        <div class="demo-emoji">😊</div>
+                        <p>The application analyzes your voice in real-time</p>
+                    </div>
+                    
+                    <ol>
+                        <li>Click the "Start Continuous Recording" button</li>
+                        <li>Speak naturally - your voice will be analyzed continuously</li>
+                        <li>The system detects when you're actually speaking</li>
+                        <li>Your emotional tone is displayed as an emoji with description</li>
+                        <li>Click the button again to stop recording</li>
+                    </ol>
+                    
+                    <p style="margin-top: 1rem;">Try speaking in different tones to see how the detected emotion changes!</p>
+                </div>
+            </div>
+        </main>
+        
+        <div class="card" style="margin-top: 2rem;">
+            <h2 class="card-title"><span class="emoji">📝</span> Example Tones</h2>
+            <p>Here are some example sentences for different tones that can be detected:</p>
+            
+            <div class="tone-examples">
+                <div class="example-card">
+                    <div class="example-emoji">🧐</div>
+                    <div class="example-tone">Formal</div>
+                    <div class="example-text">"I hereby request your attention to this matter."</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-emoji">😌</div>
+                    <div class="example-tone">Informal</div>
+                    <div class="example-text">"Hey, what's up? Just checking in."</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-emoji">😊</div>
+                    <div class="example-tone">Friendly</div>
+                    <div class="example-text">"It's so wonderful to see you again!"</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-emoji">😠</div>
+                    <div class="example-tone">Aggressive</div>
+                    <div class="example-text">"I've told you repeatedly to stop that!"</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-emoji">😃</div>
+                    <div class="example-tone">Optimistic</div>
+                    <div class="example-text">"I'm sure we'll find a solution!"</div>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-emoji">📚</div>
+                    <div class="example-tone">Informative</div>
+                    <div class="example-text">"Studies show that regular exercise improves health."</div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Voice Tone Detection Project &copy; 2025</p>
+            <div class="social-links">
+                <a href="https://github.com/lakshmang007/voice_tone_detection" target="_blank" class="social-link">
+                    <span class="social-icon">&#128187;</span> GitHub
+                </a>
+                <a href="https://www.linkedin.com/in/lakshman-g-b1a5a0214" target="_blank" class="social-link">
+                    <span class="social-icon">&#128101;</span> LinkedIn
+                </a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
