@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, Response, request, jsonify
 import random
-import os
-from http.server import BaseHTTPRequestHandler
+import json
 
 # Define emotions directly in the main file for simplicity
 emotions = {
@@ -27,36 +26,144 @@ emotions = {
 app = Flask(__name__)
 last_emotion_idx = 0
 
-@app.route('/')
-def index():
-    """Render the main page"""
-    return render_template('index.html')
+# Simple HTML page for the root route
+HTML_CONTENT = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Tone Detector</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f9f9f9;
+            color: #2d3436;
+        }
+        h1 {
+            color: #6c5ce7;
+            text-align: center;
+        }
+        .message {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .emoji {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+        }
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .link {
+            display: inline-block;
+            background-color: #6c5ce7;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .link:hover {
+            background-color: #a29bfe;
+            transform: translateY(-2px);
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .social-link {
+            color: #6c5ce7;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            background-color: rgba(108, 92, 231, 0.1);
+            display: flex;
+            align-items: center;
+        }
+        .social-link:hover {
+            background-color: rgba(108, 92, 231, 0.2);
+            transform: translateY(-2px);
+        }
+        .social-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Voice Tone Detector</h1>
 
-@app.route('/analyze', methods=['POST'])
-def analyze_audio():
-    """Analyze uploaded audio and predict emotion"""
-    try:
-        # Get request data - could be form data or JSON
-        analysis_id = None
-        is_speaking = False
-        
-        if request.is_json:
-            data = request.get_json()
-            analysis_id = data.get('analysisId', 0)
-            is_speaking = data.get('isSpeaking', False)
-            print(f"Received analysis request #{analysis_id}, isSpeaking: {is_speaking}")
-        
-        # If not speaking, return the last emotion or neutral
-        if not is_speaking:
-            if hasattr(app, 'last_emotion_idx'):
-                emotion = emotions[app.last_emotion_idx]
-            else:
-                # Default to neutral if no previous emotion
-                neutral_idx = next((i for i, e in emotions.items() 
-                                  if e['name'].lower() == 'formal'), 0)
-                emotion = emotions[neutral_idx]
-                
-            return jsonify({
+    <div class="message">
+        <div class="emoji">🎤</div>
+        <h2>Welcome to Voice Tone Detection!</h2>
+        <p>This application detects human voice tones and displays them as emojis.</p>
+        <p>The full application with interactive features is available on GitHub.</p>
+
+        <div class="links">
+            <a href="https://github.com/lakshmang007/voice_tone_detection" class="link">View on GitHub</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Voice Tone Detection Project &copy; 2023</p>
+        <div class="social-links">
+            <a href="https://github.com/lakshmang007/voice_tone_detection" target="_blank" class="social-link">
+                <span class="social-icon">&#128187;</span> GitHub
+            </a>
+            <a href="https://www.linkedin.com/in/lakshman-g-b1a5a0214" target="_blank" class="social-link">
+                <span class="social-icon">&#128101;</span> LinkedIn
+            </a>
+        </div>
+    </footer>
+</body>
+</html>
+"""
+
+def handle_request(request):
+    """Handle HTTP request for Vercel serverless function"""
+    # Handle root path
+    if request.path == '/':
+        return Response(HTML_CONTENT, mimetype='text/html')
+
+    # Handle analyze endpoint
+    if request.path == '/analyze' and request.method == 'POST':
+        try:
+            # Get request data
+            analysis_id = None
+            is_speaking = False
+
+            if request.is_json:
+                data = request.get_json()
+                analysis_id = data.get('analysisId', 0)
+                is_speaking = data.get('isSpeaking', False)
+
+            # Return a random emotion
+            emotion_idx = random.randint(0, len(emotions) - 1)
+            emotion = emotions[emotion_idx]
+
+            response_data = {
                 'status': 'success',
                 'emotion': emotion['name'],
                 'emoji': emotion['emoji'],
@@ -64,88 +171,63 @@ def analyze_audio():
                 'audio_file': 'simulated_recording.wav',
                 'analysis_id': analysis_id,
                 'is_speaking': is_speaking
-            })
-        
-        # For demonstration purposes, return a random emotion when speaking
-        # In a real implementation, you would analyze the audio data
-        
-        # Use a weighted random selection to make transitions more natural
-        # This makes it more likely to stay in the same emotion or move to a similar one
-        if hasattr(app, 'last_emotion_idx'):
-            # 50% chance to stay in the same emotion
-            # 30% chance to move to an adjacent emotion
-            # 20% chance to pick a completely random emotion
-            r = random.random()
-            if r < 0.5:  # Stay the same
-                emotion_idx = app.last_emotion_idx
-            elif r < 0.8:  # Move to adjacent
-                shift = random.choice([-1, 1])
-                emotion_idx = (app.last_emotion_idx + shift) % len(emotions)
-            else:  # Random
-                emotion_idx = random.randint(0, len(emotions) - 1)
-        else:
-            # First time, pick a random emotion
+            }
+
+            return Response(
+                json.dumps(response_data),
+                mimetype='application/json'
+            )
+
+        except Exception as e:
+            error_response = {
+                'status': 'error',
+                'message': str(e)
+            }
+            return Response(
+                json.dumps(error_response),
+                status=500,
+                mimetype='application/json'
+            )
+
+    # Handle record endpoint
+    if request.path == '/record' and request.method == 'POST':
+        try:
+            # Return a random emotion
             emotion_idx = random.randint(0, len(emotions) - 1)
-        
-        # Store for next time
-        app.last_emotion_idx = emotion_idx
-        emotion = emotions[emotion_idx]
-        
-        print(f"Analysis #{analysis_id}: Detected emotion: {emotion['name']}")
-        
-        return jsonify({
-            'status': 'success',
-            'emotion': emotion['name'],
-            'emoji': emotion['emoji'],
-            'description': emotion['description'],
-            'audio_file': 'simulated_recording.wav',
-            'analysis_id': analysis_id,
-            'is_speaking': is_speaking
-        })
-    
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
+            emotion = emotions[emotion_idx]
 
-# Keep the old endpoint for backward compatibility
-@app.route('/record', methods=['POST'])
-def record_audio():
-    """Return a simulated response for backward compatibility"""
-    try:
-        # Return a random emotion
-        emotion_idx = random.randint(0, len(emotions) - 1)
-        emotion = emotions[emotion_idx]
-        
-        return jsonify({
-            'status': 'success',
-            'emotion': emotion['name'],
-            'emoji': emotion['emoji'],
-            'description': emotion['description'],
-            'audio_file': 'simulated_recording.wav'
-        })
-    
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
+            response_data = {
+                'status': 'success',
+                'emotion': emotion['name'],
+                'emoji': emotion['emoji'],
+                'description': emotion['description'],
+                'audio_file': 'simulated_recording.wav'
+            }
 
-# For Vercel serverless function
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write('Hello, Vercel Serverless Function!'.encode())
-        return
+            return Response(
+                json.dumps(response_data),
+                mimetype='application/json'
+            )
+
+        except Exception as e:
+            error_response = {
+                'status': 'error',
+                'message': str(e)
+            }
+            return Response(
+                json.dumps(error_response),
+                status=500,
+                mimetype='application/json'
+            )
+
+    # Handle 404 for other routes
+    return Response('Not Found', status=404)
+
+# Vercel serverless function handler
+def handler(req, context):
+    with app.request_context(req.environ):
+        return handle_request(request)
 
 # This is for local development
 if __name__ == '__main__':
     app.run(debug=True)
-
-# For Vercel deployment
-app.debug = False
