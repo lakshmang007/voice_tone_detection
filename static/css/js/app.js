@@ -24,6 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let silenceTimer = 0;
     let speechTimer = 0;
 
+    // Track detected emotions for overall summary
+    let detectedEmotions = {};
+    let totalDetections = 0;
+
     // Speech detection thresholds
     const SPEECH_THRESHOLD = 15; // Adjust based on testing
     const SILENCE_THRESHOLD = 5; // Number of consecutive silent frames to consider silence
@@ -39,11 +43,15 @@ document.addEventListener('DOMContentLoaded', () => {
             emotionText.textContent = 'Listening...';
             descriptionText.textContent = '';
             statusMessage.textContent = 'Continuous voice tone detection active';
+            // Remove overall summary styling when starting a new recording
+            document.querySelector('.tone-display').classList.remove('overall-summary');
         } else {
             recordBtn.classList.remove('recording');
             btnText.textContent = 'Start Recording';
             timer.classList.add('hidden');
             seconds.textContent = '0';
+            // Note: We don't reset the emotion display here anymore
+            // This allows the overall summary to remain visible
         }
     }
 
@@ -144,6 +152,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 emotionText.textContent = `Detected: ${data.emotion}`;
                 descriptionText.textContent = data.description;
 
+                // Track emotions for summary
+                if (data.emotion) {
+                    totalDetections++;
+                    if (detectedEmotions[data.emotion]) {
+                        detectedEmotions[data.emotion]++;
+                    } else {
+                        detectedEmotions[data.emotion] = 1;
+                    }
+                }
+
                 // Add animation to the emoji
                 emoji.style.animation = 'bounce 0.5s';
                 setTimeout(() => {
@@ -234,12 +252,48 @@ document.addEventListener('DOMContentLoaded', () => {
         isRecording = false;
         isSpeaking = false;
 
-        // Update UI
-        emoji.textContent = '😶';
-        emotionText.textContent = 'Waiting for voice...';
-        descriptionText.textContent = '';
-        statusMessage.textContent = 'Recording stopped';
+        // Generate overall tone summary
+        if (totalDetections > 0) {
+            // Find the most frequent emotion
+            let dominantEmotion = '';
+            let maxCount = 0;
+
+            for (const emotion in detectedEmotions) {
+                if (detectedEmotions[emotion] > maxCount) {
+                    maxCount = detectedEmotions[emotion];
+                    dominantEmotion = emotion;
+                }
+            }
+
+            // Calculate percentage
+            const percentage = Math.round((maxCount / totalDetections) * 100);
+
+            // Get the emoji for the dominant emotion
+            let dominantEmoji = '😶';
+            // We'll use the current emoji if it matches the dominant emotion
+            if (emotionText.textContent.includes(dominantEmotion)) {
+                dominantEmoji = emoji.textContent;
+            }
+
+            // Update UI with summary
+            document.querySelector('.tone-display').classList.add('overall-summary');
+            emoji.textContent = dominantEmoji;
+            emotionText.textContent = `Overall Tone: ${dominantEmotion}`;
+            descriptionText.textContent = `You spoke in a ${dominantEmotion.toLowerCase()} tone ${percentage}% of the time.`;
+            statusMessage.textContent = `Recording stopped. Analyzed ${totalDetections} speech segments.`;
+        } else {
+            // No speech was detected
+            emoji.textContent = '😶';
+            emotionText.textContent = 'No speech detected';
+            descriptionText.textContent = 'Please try again and speak clearly.';
+            statusMessage.textContent = 'Recording stopped';
+        }
+
         updateUI(false);
+
+        // Reset emotion tracking for next recording
+        detectedEmotions = {};
+        totalDetections = 0;
     }
 
     // Event Listeners
