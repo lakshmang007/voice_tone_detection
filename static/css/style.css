@@ -90,6 +90,33 @@ header p {
     line-height: 1.4;
 }
 
+#detected-text-container {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed rgba(var(--primary-color-rgb), 0.3);
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#detected-text-container h4 {
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.detected-text {
+    font-size: 1rem;
+    color: var(--text-color);
+    line-height: 1.5;
+    padding: 0.75rem;
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+    border-radius: 0.5rem;
+    border-left: 3px solid var(--accent-color);
+    font-style: italic;
+    text-align: left;
+}
+
 .controls {
     display: flex;
     flex-direction: column;

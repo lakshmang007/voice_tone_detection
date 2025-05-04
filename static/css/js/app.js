@@ -27,6 +27,45 @@ document.addEventListener('DOMContentLoaded', () => {
     // Track detected emotions for overall summary
     let detectedEmotions = {};
     let totalDetections = 0;
+    let detectedTexts = {}; // Store example texts for each detected emotion
+
+    // Example texts for each emotion
+    const exampleTexts = {
+        "Formal": ["I hereby request your attention to this matter of utmost importance.",
+                  "As per our previous correspondence, I would like to inform you of the following developments."],
+        "Informal": ["Hey, what's up? Just checking in to see how you're doing.",
+                    "So anyway, I was thinking we could grab lunch sometime?"],
+        "Friendly": ["It's so wonderful to see you again! I've missed our chats.",
+                    "I really appreciate your help with this project, you're amazing!"],
+        "Aggressive": ["I've told you repeatedly to stop doing that! Listen to me!",
+                      "This is completely unacceptable and I demand immediate action!"],
+        "Optimistic": ["I'm sure we'll find a solution! Things are looking up!",
+                      "This is going to be a great opportunity for all of us!"],
+        "Informative": ["Studies show that regular exercise improves cognitive function.",
+                       "The data indicates a 15% increase in productivity following the implementation."],
+        "Entertaining": ["You won't believe what happened next! It was absolutely wild!",
+                        "So there I was, standing in line, when suddenly..."],
+        "Professional": ["Based on our analysis, we recommend proceeding with option B.",
+                        "I've prepared a detailed report outlining our quarterly performance."],
+        "Authoritative": ["As the expert in this field, I can assure you this is the correct approach.",
+                         "My extensive experience in this area leads me to conclude that..."],
+        "Animated": ["Oh my gosh! That's AMAZING! I can't believe it! Wow!",
+                    "This is SO exciting! I'm absolutely thrilled about this news!"],
+        "Humorous": ["So a penguin walks into a bar... you're going to love this!",
+                    "My cooking is so bad, the smoke alarm cheers me on when I enter the kitchen!"],
+        "Conversational": ["So anyway, I was thinking about what you said earlier...",
+                          "That reminds me of something that happened last weekend."],
+        "Directive": ["First, open the file. Then, click on settings. Finally, save changes.",
+                     "Please ensure all documents are submitted by Friday at the latest."],
+        "Assertive": ["I need this completed by Friday. No exceptions.",
+                     "I believe this approach will yield the best results for our team."],
+        "Questioning": ["Have you considered what might happen if we try a different approach?",
+                       "What do you think would be the implications of this decision?"],
+        "Empathic": ["I understand how difficult this must be for you. I'm here to help.",
+                    "That sounds really challenging. How are you feeling about it?"],
+        "Persuasive": ["Imagine how much better your life will be once you make this change.",
+                      "You don't want to miss out on this incredible opportunity."]
+    };
 
     // Speech detection thresholds
     const SPEECH_THRESHOLD = 15; // Adjust based on testing
@@ -45,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.textContent = 'Continuous voice tone detection active';
             // Remove overall summary styling when starting a new recording
             document.querySelector('.tone-display').classList.remove('overall-summary');
+            // Hide detected text container when starting recording
+            document.getElementById('detected-text-container').classList.add('hidden');
         } else {
             recordBtn.classList.remove('recording');
             btnText.textContent = 'Start Recording';
@@ -159,6 +200,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         detectedEmotions[data.emotion]++;
                     } else {
                         detectedEmotions[data.emotion] = 1;
+                    }
+
+                    // Store a random example text for this emotion
+                    if (exampleTexts[data.emotion] && exampleTexts[data.emotion].length > 0) {
+                        const randomIndex = Math.floor(Math.random() * exampleTexts[data.emotion].length);
+                        detectedTexts[data.emotion] = exampleTexts[data.emotion][randomIndex];
                     }
                 }
 
@@ -281,6 +328,22 @@ document.addEventListener('DOMContentLoaded', () => {
             emotionText.textContent = `Overall Tone: ${dominantEmotion}`;
             descriptionText.textContent = `You spoke in a ${dominantEmotion.toLowerCase()} tone ${percentage}% of the time.`;
             statusMessage.textContent = `Recording stopped. Analyzed ${totalDetections} speech segments.`;
+
+            // Display detected text example
+            const detectedTextContainer = document.getElementById('detected-text-container');
+            const detectedTextElement = document.getElementById('detected-text');
+
+            if (detectedTexts[dominantEmotion]) {
+                detectedTextElement.textContent = `"${detectedTexts[dominantEmotion]}"`;
+                detectedTextContainer.classList.remove('hidden');
+            } else if (exampleTexts[dominantEmotion] && exampleTexts[dominantEmotion].length > 0) {
+                // Fallback to a random example if we don't have a detected text
+                const randomIndex = Math.floor(Math.random() * exampleTexts[dominantEmotion].length);
+                detectedTextElement.textContent = `"${exampleTexts[dominantEmotion][randomIndex]}"`;
+                detectedTextContainer.classList.remove('hidden');
+            } else {
+                detectedTextContainer.classList.add('hidden');
+            }
         } else {
             // No speech was detected
             emoji.textContent = '😶';
@@ -293,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset emotion tracking for next recording
         detectedEmotions = {};
+        detectedTexts = {};
         totalDetections = 0;
     }
 
