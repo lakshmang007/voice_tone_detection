@@ -240,6 +240,36 @@ footer {
     margin-top: 2rem;
     color: var(--text-light);
     font-size: 0.9rem;
+    padding-bottom: 1.5rem;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.social-link:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.2);
+    transform: translateY(-2px);
+}
+
+.social-icon {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
 }
 
 /* Responsive design */
