@@ -1,14 +1,31 @@
 from flask import Flask, render_template, request, jsonify
-import numpy as np
-import scipy.io.wavfile as wav
-import tempfile
-import os
-import time
-import io
-from model.tone_detector import ToneDetector
+import random
 
 app = Flask(__name__)
-tone_detector = ToneDetector()
+
+# Define emotions directly in the main file for simplicity
+emotions = {
+    0: {"name": "Formal", "emoji": "🧐", "description": "Clear, precise, and professional"},
+    1: {"name": "Informal", "emoji": "😌", "description": "Conversational, relaxed, and friendly"},
+    2: {"name": "Friendly", "emoji": "😊", "description": "Warm, approachable, and welcoming"},
+    3: {"name": "Aggressive", "emoji": "😠", "description": "Loud, forceful, and confrontational"},
+    4: {"name": "Optimistic", "emoji": "😃", "description": "Enthusiastic, positive, and upbeat"},
+    5: {"name": "Informative", "emoji": "📚", "description": "Neutral, factual, and educational"},
+    6: {"name": "Entertaining", "emoji": "🎭", "description": "Humorous, engaging, and captivating"},
+    7: {"name": "Professional", "emoji": "👔", "description": "Confident, authoritative, and credible"},
+    8: {"name": "Authoritative", "emoji": "👑", "description": "Confident, expert, and persuasive"},
+    9: {"name": "Animated", "emoji": "✨", "description": "Energetic, lively, and enthusiastic"},
+    10: {"name": "Humorous", "emoji": "😄", "description": "Playful, witty, and lighthearted"},
+    11: {"name": "Conversational", "emoji": "💬", "description": "Natural, relatable, and engaging"},
+    12: {"name": "Directive", "emoji": "👉", "description": "Clear, concise, and commanding"},
+    13: {"name": "Assertive", "emoji": "💪", "description": "Confident, firm, and unapologetic"},
+    14: {"name": "Questioning", "emoji": "🤔", "description": "Curious, open, and seeking information"},
+    15: {"name": "Empathic", "emoji": "💖", "description": "Understanding, supportive, and compassionate"},
+    16: {"name": "Persuasive", "emoji": "🎯", "description": "Motivating, encouraging, and influential"}
+}
+
+# Store the last emotion index
+last_emotion_idx = 0
 
 # Configuration
 SAMPLE_RATE = 16000  # Sample rate in Hz
@@ -35,12 +52,12 @@ def analyze_audio():
         # If not speaking, return the last emotion or neutral
         if not is_speaking:
             if hasattr(app, 'last_emotion_idx'):
-                emotion = tone_detector.emotions[app.last_emotion_idx]
+                emotion = emotions[app.last_emotion_idx]
             else:
                 # Default to neutral if no previous emotion
-                neutral_idx = next((i for i, e in tone_detector.emotions.items()
+                neutral_idx = next((i for i, e in emotions.items()
                                   if e['name'].lower() == 'formal'), 0)
-                emotion = tone_detector.emotions[neutral_idx]
+                emotion = emotions[neutral_idx]
 
             return jsonify({
                 'status': 'success',
@@ -54,7 +71,6 @@ def analyze_audio():
 
         # For demonstration purposes, return a random emotion when speaking
         # In a real implementation, you would analyze the audio data
-        import random
 
         # Use a weighted random selection to make transitions more natural
         # This makes it more likely to stay in the same emotion or move to a similar one
@@ -67,16 +83,16 @@ def analyze_audio():
                 emotion_idx = app.last_emotion_idx
             elif r < 0.8:  # Move to adjacent
                 shift = random.choice([-1, 1])
-                emotion_idx = (app.last_emotion_idx + shift) % len(tone_detector.emotions)
+                emotion_idx = (app.last_emotion_idx + shift) % len(emotions)
             else:  # Random
-                emotion_idx = random.randint(0, len(tone_detector.emotions) - 1)
+                emotion_idx = random.randint(0, len(emotions) - 1)
         else:
             # First time, pick a random emotion
-            emotion_idx = random.randint(0, len(tone_detector.emotions) - 1)
+            emotion_idx = random.randint(0, len(emotions) - 1)
 
         # Store for next time
         app.last_emotion_idx = emotion_idx
-        emotion = tone_detector.emotions[emotion_idx]
+        emotion = emotions[emotion_idx]
 
         print(f"Analysis #{analysis_id}: Detected emotion: {emotion['name']}")
 
@@ -103,9 +119,8 @@ def record_audio():
     """Return a simulated response for backward compatibility"""
     try:
         # Return a random emotion
-        import random
-        emotion_idx = random.randint(0, len(tone_detector.emotions) - 1)
-        emotion = tone_detector.emotions[emotion_idx]
+        emotion_idx = random.randint(0, len(emotions) - 1)
+        emotion = emotions[emotion_idx]
 
         return jsonify({
             'status': 'success',
