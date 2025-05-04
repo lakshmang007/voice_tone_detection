@@ -115,6 +115,15 @@ header p {
     border-left: 3px solid var(--accent-color);
     font-style: italic;
     text-align: left;
+    margin-bottom: 0.5rem;
+}
+
+.text-note {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-align: right;
+    font-style: italic;
+    margin-top: 0.25rem;
 }
 
 .controls {

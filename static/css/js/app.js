@@ -24,6 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let silenceTimer = 0;
     let speechTimer = 0;
 
+    // Speech recognition variables
+    let recognition = null;
+    let transcriptBuffer = [];
+    let currentTranscript = "";
+
     // Track detected emotions for overall summary
     let detectedEmotions = {};
     let totalDetections = 0;
@@ -220,6 +225,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Initialize speech recognition
+    function initSpeechRecognition() {
+        // Check if browser supports speech recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            console.error("Speech recognition not supported in this browser");
+            statusMessage.textContent = "Speech-to-text not supported in your browser";
+            return false;
+        }
+
+        // Create recognition object
+        recognition = new SpeechRecognition();
+
+        // Configure recognition
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        // Set up event handlers
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            // Process results
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                    // Add to transcript buffer (keep last 5 sentences)
+                    transcriptBuffer.push(transcript.trim());
+                    if (transcriptBuffer.length > 5) {
+                        transcriptBuffer.shift();
+                    }
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            // Update current transcript with final + interim
+            currentTranscript = finalTranscript + interimTranscript;
+
+            // Update UI with detected text if speaking
+            if (isSpeaking && currentTranscript.trim() !== '') {
+                const detectedTextContainer = document.getElementById('detected-text-container');
+                const detectedTextElement = document.getElementById('detected-text');
+
+                detectedTextElement.textContent = `"${currentTranscript.trim()}"`;
+                detectedTextContainer.classList.remove('hidden');
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            if (event.error === 'no-speech') {
+                // This is a common error, no need to show to user
+                return;
+            }
+            statusMessage.textContent = `Speech recognition error: ${event.error}`;
+        };
+
+        recognition.onend = () => {
+            // Restart recognition if recording is still active
+            if (isRecording) {
+                recognition.start();
+            }
+        };
+
+        return true;
+    }
+
     async function startRecording() {
         try {
             // Request microphone access
@@ -268,6 +345,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             analysisInterval = setInterval(analyzeAudio, 1000); // Analyze every second
 
+            // Initialize and start speech recognition
+            if (initSpeechRecognition()) {
+                try {
+                    recognition.start();
+                    console.log("Speech recognition started");
+                } catch (e) {
+                    console.error("Error starting speech recognition:", e);
+                }
+            }
+
         } catch (error) {
             console.error('Error accessing microphone:', error);
             statusMessage.textContent = `Error accessing microphone: ${error.message}`;
@@ -288,6 +375,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Close audio context
         if (audioContext && audioContext.state !== 'closed') {
             audioContext.close();
+        }
+
+        // Stop speech recognition
+        if (recognition) {
+            try {
+                recognition.stop();
+                console.log("Speech recognition stopped");
+            } catch (e) {
+                console.error("Error stopping speech recognition:", e);
+            }
         }
 
         // Clear all intervals
@@ -329,17 +426,33 @@ document.addEventListener('DOMContentLoaded', () => {
             descriptionText.textContent = `You spoke in a ${dominantEmotion.toLowerCase()} tone ${percentage}% of the time.`;
             statusMessage.textContent = `Recording stopped. Analyzed ${totalDetections} speech segments.`;
 
-            // Display detected text example
+            // Display detected text
             const detectedTextContainer = document.getElementById('detected-text-container');
             const detectedTextElement = document.getElementById('detected-text');
 
-            if (detectedTexts[dominantEmotion]) {
-                detectedTextElement.textContent = `"${detectedTexts[dominantEmotion]}"`;
+            // Use the transcript buffer if we have actual transcribed text
+            if (transcriptBuffer.length > 0) {
+                // Join the last few transcripts, but limit to a reasonable length
+                let displayText = transcriptBuffer.join(' ');
+                if (displayText.length > 150) {
+                    displayText = displayText.substring(displayText.length - 150);
+                    // Try to start at a word boundary
+                    const firstSpaceIndex = displayText.indexOf(' ');
+                    if (firstSpaceIndex > 0) {
+                        displayText = displayText.substring(firstSpaceIndex + 1);
+                    }
+                }
+                detectedTextElement.textContent = `"${displayText}"`;
+                detectedTextContainer.classList.remove('hidden');
+            }
+            // Fallback to example texts if no transcription is available
+            else if (detectedTexts[dominantEmotion]) {
+                detectedTextElement.textContent = `"${detectedTexts[dominantEmotion]}" (Example)`;
                 detectedTextContainer.classList.remove('hidden');
             } else if (exampleTexts[dominantEmotion] && exampleTexts[dominantEmotion].length > 0) {
                 // Fallback to a random example if we don't have a detected text
                 const randomIndex = Math.floor(Math.random() * exampleTexts[dominantEmotion].length);
-                detectedTextElement.textContent = `"${exampleTexts[dominantEmotion][randomIndex]}"`;
+                detectedTextElement.textContent = `"${exampleTexts[dominantEmotion][randomIndex]}" (Example)`;
                 detectedTextContainer.classList.remove('hidden');
             } else {
                 detectedTextContainer.classList.add('hidden');
@@ -358,6 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
         detectedEmotions = {};
         detectedTexts = {};
         totalDetections = 0;
+
+        // Reset transcript data
+        transcriptBuffer = [];
+        currentTranscript = "";
     }
 
     // Event Listeners
