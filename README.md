@@ -48,7 +48,7 @@ python main.py
 
 ## Project Structure
 
-```
+```'
 voice_tone_detection/
 ├── main.py                # Flask application
 ├── model/
@@ -60,7 +60,7 @@ voice_tone_detection/
 │           └── app.js     # JavaScript functionality
 └── templates/
     └── index.html         # HTML template
-```
+```'
 
 ## Future Improvements
 
